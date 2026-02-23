@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>VirtualSIM — Nomor Virtual OTP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#070d1a;--bg2:#0c1528;--bg3:#111e33;
+  --card:#0f1c30;--card2:#162035;--card3:#1c2a3f;
+  --border:#1e2f47;--border2:#243550;
+  --blue:#3b82f6;--blue2:#2563eb;--blue3:#1d4ed8;
+  --blue-glow:rgba(59,130,246,.2);--blue-glow2:rgba(59,130,246,.1);
+  --cyan:#06b6d4;--indigo:#6366f1;
+  --green:#22c55e;--green-dim:rgba(34,197,94,.15);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --yellow:#f59e0b;--yellow-dim:rgba(245,158,11,.12);
+  --text:#e8f0fe;--text2:#8fa8c8;--text3:#4d6b8a;
+  --nav-h:68px;--r:14px;--r-sm:10px;--r-lg:18px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;overflow-x:hidden}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.view{display:none}
+.view.active{display:block}
+#app{min-height:100vh}
+.page{display:none;min-height:calc(100vh - var(--nav-h));padding-bottom:calc(var(--nav-h) + 8px);animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+#auth-view{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg);position:relative;overflow:hidden}
+#auth-view::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);pointer-events:none}
+.auth-box{width:100%;max-width:400px;position:relative;z-index:1}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo-icon{width:72px;height:72px;background:linear-gradient(135deg,#1d4ed8,#6366f1);border-radius:22px;display:inline-flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:14px;box-shadow:0 0 40px rgba(59,130,246,.35),0 0 80px rgba(99,102,241,.15)}
+.auth-logo h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;background:linear-gradient(135deg,#e8f0fe,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-logo p{color:var(--text3);font-size:13px;margin-top:4px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.auth-tabs{display:flex;background:var(--bg2);border-radius:var(--r-sm);padding:3px;margin-bottom:22px;gap:3px}
+.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);transition:.2s;font-family:'DM Sans',sans-serif}
+.auth-tab.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.field input{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:.2s;font-family:'DM Sans',sans-serif}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.field input::placeholder{color:var(--text3)}
+.admin-toggle{margin-bottom:14px}
+.admin-toggle details summary{cursor:pointer;font-size:12px;color:var(--text3);list-style:none;display:flex;align-items:center;gap:6px}
+.admin-toggle details[open] .field{display:block}
+.btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'DM Sans',sans-serif;letter-spacing:.3px}
+.btn:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 8px 20px rgba(59,130,246,.35)}
+.btn:active{transform:scale(.98);transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn.ghost{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}
+.btn.ghost:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-glow2)}
+.btn.danger{background:var(--red)}
+.btn.danger:hover{background:#dc2626}
+.btn.success{background:var(--green)}
+.btn.sm{padding:8px 16px;width:auto;font-size:13px;border-radius:8px}
+.btn.xs{padding:5px 12px;width:auto;font-size:12px;border-radius:7px}
+.err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;padding:8px;background:var(--red-dim);border-radius:8px}
+
+/* =========================================================
+   BOTTOM NAV
+   ========================================================= */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:200;padding:0 6px 0;backdrop-filter:blur(20px)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 14px;cursor:pointer;color:var(--text3);transition:.2s;border-radius:12px;position:relative;min-width:48px}
+.nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:.2s}
+.nav-item span{font-size:10px;font-weight:600;transition:.2s;letter-spacing:.3px}
+.nav-item.active{color:var(--blue)}
+.nav-item.active svg{stroke:var(--blue)}
+.nav-center{width:56px;height:56px;background:linear-gradient(135deg,var(--blue),var(--indigo));border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(59,130,246,.45);cursor:pointer;margin-bottom:8px;transition:.2s}
+.nav-center:hover{transform:scale(1.05)}
+.nav-center svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;position:sticky;top:0;background:rgba(7,13,26,.9);backdrop-filter:blur(16px);z-index:100;border-bottom:1px solid rgba(30,47,71,.5)}
+.header-logo{display:flex;align-items:center;gap:10px}
+.header-logo .hli{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--indigo));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.header-logo h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;background:linear-gradient(135deg,#e8f0fe,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.icon-btn{width:38px;height:38px;background:var(--card2);border:1px solid var(--border);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:.2s;flex-shrink:0}
+.icon-btn:hover{background:var(--card3);color:var(--blue)}
+.icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* =========================================================
+   CARDS & UI
+   ========================================================= */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.section-title a{font-size:12px;color:var(--blue);font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+
+/* =========================================================
+   SALDO CARD
+   ========================================================= */
+.saldo-card{background:linear-gradient(135deg,#0f2144,#132a52);border:1px solid rgba(59,130,246,.2);border-radius:var(--r-lg);padding:22px 18px;position:relative;overflow:hidden}
+.saldo-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(59,130,246,.15),transparent);pointer-events:none}
+.saldo-card::after{content:'';position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(99,102,241,.1),transparent);pointer-events:none}
+.saldo-label{font-size:12px;color:#8fa8c8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.saldo-amount{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1}
+.saldo-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.online-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:#8fa8c8}
+.dot-pulse{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px var(--green)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.topup-btn{background:rgba(59,130,246,.15);border:1.5px solid rgba(59,130,246,.35);color:var(--blue);padding:7px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.3px}
+.topup-btn:hover{background:rgba(59,130,246,.25)}
+
+/* =========================================================
+   BANNER
+   ========================================================= */
+.banner-scroll{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;margin:0 -16px;scrollbar-width:none}
+.banner-scroll::-webkit-scrollbar{display:none}
+.banner-card{min-width:180px;height:100px;background:linear-gradient(135deg,#0f2144,#132a52);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:default}
+.banner-card .bc-icon{font-size:30px}
+.banner-card .bc-text{font-size:13px;font-weight:700;color:var(--text);line-height:1.4}
+.banner-card .bc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* =========================================================
+   APP GRID
+   ========================================================= */
+.apps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.apps-grid.dense{grid-template-columns:repeat(5,1fr)}
+.app-chip{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;cursor:pointer;border-radius:12px;transition:.15s;border:1.5px solid transparent}
+.app-chip:hover{background:var(--card2);border-color:var(--border2)}
+.app-chip:active{transform:scale(.93)}
+.app-chip .ac-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--border)}
+.app-chip span{font-size:10px;color:var(--text2);text-align:center;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+
+/* =========================================================
+   ORDER CARDS
+   ========================================================= */
+.order-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;transition:.2s}
+.order-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.order-card.status-pending::before{background:var(--yellow)}
+.order-card.status-completed::before{background:var(--green)}
+.order-card.status-cancelled::before{background:var(--red)}
+.oc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.oc-service{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.badge.pending{background:var(--yellow-dim);color:var(--yellow)}
+.badge.completed{background:var(--green-dim);color:var(--green)}
+.badge.cancelled{background:var(--red-dim);color:var(--red)}
+.badge.success{background:var(--green-dim);color:var(--green)}
+.oc-phone{font-family:'DM Mono',monospace,sans-serif;font-size:18px;font-weight:700;color:var(--blue);letter-spacing:.5px;margin:6px 0}
+.oc-otp{font-family:'DM Mono',monospace,sans-serif;font-size:26px;font-weight:800;color:var(--green);letter-spacing:3px}
+.oc-info{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text3);margin-top:4px}
+.oc-btns{display:flex;gap:6px;margin-top:10px}
+.empty-state{text-align:center;padding:36px 20px;color:var(--text3)}
+.empty-icon{font-size:44px;margin-bottom:10px;opacity:.7}
+.empty-title{font-size:15px;color:var(--text2);font-weight:600;margin-bottom:4px}
+.empty-sub{font-size:13px}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+.search-wrap{position:relative;margin:0 16px 14px}
+.search-wrap input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px 11px 42px;color:var(--text);font-size:14px;outline:none;transition:.2s;font-family:'DM Sans',sans-serif}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.search-wrap .s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.search-wrap .s-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+.loading{text-align:center;padding:40px 16px;color:var(--text3)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+.spinner.sm{width:20px;height:20px;border-width:2px;margin:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =========================================================
+   SHEETS / MODALS
+   ========================================================= */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
+.overlay.open{display:flex}
+.sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:0 16px 32px;animation:sheetUp .25s cubic-bezier(.32,1.2,.64,1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:3px;background:var(--border2);border-radius:2px;margin:12px auto 16px}
+.sheet-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text)}
+.sheet-close{width:30px;height:30px;background:var(--bg2);border:none;border-radius:8px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:16px;transition:.15s}
+.sheet-close:hover{background:var(--card3);color:var(--text)}
+
+/* Country / Price items */
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--card2);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;transition:.15s}
+.list-item:hover,.list-item:active{border-color:var(--blue);background:rgba(59,130,246,.06)}
+.li-left{display:flex;align-items:center;gap:10px}
+.li-icon{font-size:22px;flex-shrink:0}
+.li-name{font-size:14px;font-weight:600;color:var(--text)}
+.li-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.li-price{font-size:15px;font-weight:800;color:var(--blue);white-space:nowrap}
+.li-price small{font-size:11px;color:var(--text3);display:block;text-align:right;font-weight:400}
+.li-stock{font-size:11px;background:var(--green-dim);color:var(--green);padding:3px 10px;border-radius:20px;font-weight:700}
+
+/* Confirm detail */
+.confirm-box{background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.confirm-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.confirm-row:last-child{border:none;font-weight:700;font-size:15px}
+.confirm-row .cr-label{color:var(--text2)}
+.confirm-row .cr-val{color:var(--text);font-weight:600}
+.confirm-row .cr-price{color:var(--blue);font-weight:800;font-size:18px;font-family:'Syne',sans-serif}
+.saldo-alert{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--r-sm);font-size:13px;margin-bottom:14px}
+.saldo-alert.ok{background:var(--green-dim);border:1px solid rgba(34,197,94,.25);color:var(--green)}
+.saldo-alert.err{background:var(--red-dim);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+
+/* Active order */
+.ao-box{background:var(--bg2);border-radius:var(--r);padding:20px;text-align:center;border:1px solid var(--border)}
+.ao-service-label{font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.ao-phone{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);margin:8px 0;letter-spacing:.5px;word-break:break-all}
+.ao-otp{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--green);letter-spacing:6px;margin:10px 0;text-shadow:0 0 20px rgba(34,197,94,.3)}
+.ao-waiting{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text3);font-size:13px;padding:12px 0}
+.ao-timer{font-size:13px;color:var(--yellow);margin-top:6px;font-weight:600}
+.copy-chip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-glow2);border:1.5px solid rgba(59,130,246,.25);color:var(--blue);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:.2s}
+.copy-chip:hover{background:rgba(59,130,246,.2)}
+
+/* =========================================================
+   DEPOSIT
+   ========================================================= */
+.dep-form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.dep-form-card .dfh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.dep-form-card .dfh .icon{width:46px;height:46px;background:rgba(59,130,246,.12);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid rgba(59,130,246,.2)}
+.dep-form-card .dfh h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.dep-form-card .dfh p{font-size:12px;color:var(--text3);margin-top:2px}
+.amount-field{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;display:flex;align-items:center;gap:10px;margin:14px 0;transition:.2s}
+.amount-field:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.amount-field .af-prefix{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text2)}
+.amount-field input{background:transparent;border:none;outline:none;color:var(--text);font-size:24px;font-weight:800;flex:1;width:100%;font-family:'Syne',sans-serif}
+.amount-field input::placeholder{color:var(--border2)}
+.dep-hint{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text3);display:flex;gap:8px;margin-bottom:14px}
+.dep-history-row{background:var(--card2);border-radius:var(--r-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.dhr-l .dhr-amount{font-size:15px;font-weight:700}
+.dhr-l .dhr-id{font-size:11px;color:var(--text3);margin-top:2px}
+.dhr-r .dhr-recv{font-size:13px;font-weight:700}
+.dhr-r .dhr-date{font-size:11px;color:var(--text3);margin-top:2px;text-align:right}
+
+/* QRIS Sheet */
+.qr-img-wrap{text-align:center;padding:12px 0}
+.qr-img-wrap img{max-width:220px;border-radius:14px;background:#fff;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.qr-detail{background:var(--bg2);border-radius:var(--r-sm);padding:14px;margin:12px 0}
+.qr-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.qr-row:last-child{border:none}
+.qr-row .qrl{color:var(--text2)}
+.qr-row .qrv{font-weight:700}
+.dep-exp-bar{display:flex;align-items:center;gap:8px;background:var(--yellow-dim);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--yellow);font-weight:600;margin-bottom:12px}
+.auto-check-note{text-align:center;font-size:12px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* =========================================================
+   ACTIVITY
+   ========================================================= */
+.filter-bar{display:flex;gap:7px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:var(--card);border:1.5px solid var(--border);color:var(--text2);white-space:nowrap;transition:.2s;letter-spacing:.3px}
+.filter-chip.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.activity-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(30,47,71,.5);cursor:pointer;transition:.15s}
+.activity-item:hover{background:rgba(255,255,255,.02)}
+.ai-ico{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ai-service{font-size:14px;font-weight:700;color:var(--text)}
+.ai-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.ai-phone{font-size:12px;color:var(--text2);font-family:monospace;margin-top:2px}
+.ai-otp{font-size:14px;font-weight:800;color:var(--green);font-family:'Syne',sans-serif}
+.ai-price-wrap{text-align:right;flex-shrink:0}
+.ai-price{font-size:14px;font-weight:800;color:var(--blue)}
+.ai-date{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+.profile-hero{background:linear-gradient(135deg,#0f2144,#132a52);border:1px solid rgba(59,130,246,.2);border-radius:var(--r-lg);padding:20px 18px;margin:0 16px 12px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}
+.profile-hero::before{content:'';position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(59,130,246,.12),transparent);pointer-events:none}
+.pf-avatar{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 8px 20px rgba(59,130,246,.4)}
+.pf-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff}
+.pf-email{font-size:13px;color:#8fa8c8;margin-top:2px}
+.pf-joined{font-size:11px;color:#4d6b8a;margin-top:4px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 16px 12px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--blue)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.menu-group{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.mg-title{font-size:11px;color:var(--text3);padding:12px 14px 6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.menu-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--border);cursor:pointer;transition:.15s}
+.menu-row:hover{background:var(--card2)}
+.mr-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.mr-label{font-size:14px;font-weight:600;flex:1}
+.mr-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.mr-arrow svg{width:16px;height:16px;fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* =========================================================
+   ADMIN LAYOUT
+   ========================================================= */
+#admin-view{display:none;min-height:100vh;background:var(--bg)}
+#admin-view.active{display:flex}
+.admin-sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;flex-shrink:0}
+.admin-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.admin-logo h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;background:linear-gradient(135deg,#e8f0fe,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.admin-logo p{font-size:11px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px}
+.sidebar-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer;color:var(--text3);transition:.15s;margin-bottom:2px;font-size:14px;font-weight:600}
+.sidebar-nav-item:hover{background:var(--card2);color:var(--text)}
+.sidebar-nav-item.active{background:rgba(59,130,246,.12);color:var(--blue)}
+.sidebar-nav-item svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sidebar-nav-item .sni-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+.sidebar-bottom{padding:12px 10px;border-top:1px solid var(--border)}
+.admin-content{flex:1;overflow-y:auto;max-height:100vh}
+.admin-page{display:none;padding:24px;animation:fadeIn .2s ease}
+.admin-page.active{display:block}
+.admin-header{margin-bottom:24px}
+.admin-header h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text)}
+.admin-header p{font-size:13px;color:var(--text3);margin-top:4px}
+
+/* ADMIN: Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden}
+.stat-box::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 var(--r) 0 60px;opacity:.15}
+.stat-box.blue::before{background:var(--blue)}
+.stat-box.green::before{background:var(--green)}
+.stat-box.yellow::before{background:var(--yellow)}
+.stat-box.red::before{background:var(--red)}
+.stat-box.cyan::before{background:var(--cyan)}
+.sb-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.sb-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1}
+.sb-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.sb-icon{font-size:20px;margin-bottom:8px}
+
+/* ADMIN: Table */
+.admin-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.admin-search{position:relative;flex:1;min-width:200px}
+.admin-search input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px 9px 38px;color:var(--text);font-size:13px;outline:none;transition:.2s;font-family:'DM Sans',sans-serif}
+.admin-search input:focus{border-color:var(--blue)}
+.admin-search .asi{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.admin-search .asi svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.admin-table{width:100%;border-collapse:collapse}
+.admin-table th{background:var(--bg2);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.admin-table td{padding:12px 14px;font-size:13px;border-top:1px solid var(--border);color:var(--text2);vertical-align:middle}
+.admin-table tr:hover td{background:rgba(255,255,255,.02)}
+.admin-table .td-name{font-weight:700;color:var(--text)}
+.admin-table .td-email{font-size:12px;color:var(--text3)}
+.admin-table .td-saldo{font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)}
+.admin-table .td-actions{display:flex;gap:6px;flex-wrap:wrap}
+.select-sm{background:var(--card);border:1.5px solid var(--border);color:var(--text2);padding:8px 12px;border-radius:8px;font-size:13px;outline:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.select-sm:focus{border-color:var(--blue)}
+
+/* ADMIN: Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:460px;padding:24px;animation:modalIn .2s cubic-bezier(.32,1.2,.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:var(--bg2);border:none;color:var(--text2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--text);background:var(--card3)}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border:none}
+.info-row .ir-label{color:var(--text3)}
+.info-row .ir-val{font-weight:600;color:var(--text)}
+
+/* =========================================================
+   RESPONSIVE ADMIN
+   ========================================================= */
+@media(max-width:700px){
+  .admin-sidebar{display:none}
+  .admin-content{max-height:unset}
+  #admin-view{flex-direction:column}
+  .admin-mobile-nav{display:flex!important}
+  .admin-page{padding:16px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+.admin-mobile-nav{display:none;background:var(--card);border-top:1px solid var(--border);padding:8px 4px;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100}
+.admin-mobile-nav::-webkit-scrollbar{display:none}
+.amn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;cursor:pointer;color:var(--text3);border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;transition:.15s}
+.amn-item svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.amn-item.active{color:var(--blue);background:var(--blue-glow2)}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--card3);border:1px solid var(--border2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--text);z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;max-width:92vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--green);background:rgba(34,197,94,.08)}
+.toast.fail{border-color:rgba(239,68,68,.4);color:var(--red);background:rgba(239,68,68,.08)}
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+.px{padding-left:16px;padding-right:16px}
+.mt-12{margin-top:12px}
+.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}
+.mb-12{margin-bottom:12px}
+.gap-8{gap:8px}
+.hidden{display:none!important}
+.flex{display:flex}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.w-full{width:100%}
+.text-right{text-align:right}
+hr.sep{border:none;border-top:1px solid var(--border);margin:12px 0}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     AUTH VIEW
+     ============================================================ -->
+<div id="auth-view" class="view active">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">💳</div>
+      <h1>VirtualSIM</h1>
+      <p>Nomor Virtual OTP Real-Time 24/7</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Masuk</div>
+        <div class="auth-tab" id="tab-reg-btn" onclick="switchAuthTab('register')">Daftar</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="tab-login">
+        <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="email@kamu.com" autocomplete="email"></div>
+        <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="Password kamu" autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()"></div>
+        <div class="err" id="l-err"></div>
+        <button class="btn mt-12" id="l-btn" onclick="doLogin()">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Masuk Sekarang
+        </button>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="tab-register" class="hidden">
+        <div class="field"><label>Nama Lengkap</label><input type="text" id="r-name" placeholder="Nama kamu"></div>
+        <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="email@kamu.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 karakter" onkeypress="if(event.key==='Enter')doRegister()"></div>
+        <details style="margin-bottom:14px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--text3);font-weight:600">🔑 Punya kode admin?</summary>
+          <div class="field" style="margin-top:10px"><label>Kode Admin</label><input type="text" id="r-admin" placeholder="Masukkan kode admin"></div>
+        </details>
+        <div class="err" id="r-err"></div>
+        <button class="btn" id="r-btn" onclick="doRegister()">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Buat Akun
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     USER APP VIEW
+     ============================================================ -->
+<div id="app-view" class="view">
+  <div id="app">
+
+    <!-- ===== HOME ===== -->
+    <div class="page active" id="pg-home">
+      <div class="app-header">
+        <div class="header-logo"><div class="hli">💳</div><h2>VirtualSIM</h2></div>
+        <div class="flex gap-8">
+          <div class="icon-btn" onclick="loadHome()" title="Refresh">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          </div>
+          <div class="icon-btn" onclick="goPage('pg-profile')">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="px" style="padding-top:14px">
+        <div class="saldo-card">
+          <div class="saldo-label">Saldo Kamu</div>
+          <div class="saldo-amount" id="home-saldo">Rp 0</div>
+          <div class="saldo-row">
+            <div class="online-badge"><div class="dot-pulse"></div><span id="server-status">Online</span></div>
+            <button class="topup-btn" onclick="goPage('pg-deposit')">Top Up +</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banners -->
+      <div style="margin-top:14px">
+        <div class="banner-scroll">
+          <div class="banner-card"><div class="bc-icon">📱</div><div><div class="bc-text">1,038+ Aplikasi</div><div class="bc-sub">OTP Real-Time</div></div></div>
+          <div class="banner-card"><div class="bc-icon">🌍</div><div><div class="bc-text">193+ Negara</div><div class="bc-sub">Semua Provider</div></div></div>
+          <div class="banner-card"><div class="bc-icon">⚡</div><div><div class="bc-text">Auto Refund</div><div class="bc-sub">Jika Gagal 100%</div></div></div>
+          <div class="banner-card"><div class="bc-icon">🔒</div><div><div class="bc-text">100% Aman</div><div class="bc-sub">Data Terenkripsi</div></div></div>
+        </div>
+      </div>
+
+      <div class="px" style="margin-top:14px">
+        <!-- Popular Apps -->
+        <div class="section-title">🔥 Populer <a onclick="goPage('pg-order')">Lihat Semua →</a></div>
+        <div class="apps-grid" id="home-popular">
+          <div class="app-chip" onclick="startOrder('6','WhatsApp')"><div class="ac-icon" style="background:#25d36620">💬</div><span>WhatsApp</span></div>
+          <div class="app-chip" onclick="startOrder('1','Telegram')"><div class="ac-icon" style="background:#2ca5e020">✈️</div><span>Telegram</span></div>
+          <div class="app-chip" onclick="startOrder('3','Instagram')"><div class="ac-icon" style="background:#e1306c20">📸</div><span>Instagram</span></div>
+          <div class="app-chip" onclick="startOrder('4','Facebook')"><div class="ac-icon" style="background:#1877f220">👤</div><span>Facebook</span></div>
+          <div class="app-chip" onclick="startOrder('9','TikTok')"><div class="ac-icon" style="background:#00000060">🎵</div><span>TikTok</span></div>
+          <div class="app-chip" onclick="startOrder('11','Shopee')"><div class="ac-icon" style="background:#ee4d2d20">🛒</div><span>Shopee</span></div>
+          <div class="app-chip" onclick="startOrder('17','Gojek')"><div class="ac-icon" style="background:#00880020">🛵</div><span>Gojek</span></div>
+          <div class="app-chip" onclick="goPage('pg-order')"><div class="ac-icon" style="background:var(--blue-glow)">➕</div><span>Semua</span></div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="section-title mt-16">📦 Pesanan Aktif <a onclick="goPage('pg-activity')">History →</a></div>
+        <div id="home-pending">
+          <div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada pesanan aktif</div><div class="empty-sub">Pesanan pending muncul di sini</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ORDER ===== -->
+    <div class="page" id="pg-order">
+      <div class="app-header">
+        <div class="header-logo"><div class="hli">📱</div><h2>Beli Nomor</h2></div>
+      </div>
+      <div class="search-wrap">
+        <div class="s-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <input type="text" id="srv-q" placeholder="Cari layanan... (WhatsApp, Gmail, dll)" oninput="filterSrv()">
+      </div>
+      <div id="srv-grid" class="apps-grid dense px">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Memuat layanan...</div>
+      </div>
+    </div>
+
+    <!-- ===== DEPOSIT ===== -->
+    <div class="page" id="pg-deposit">
+      <div class="app-header">
+        <div class="header-logo"><div class="hli">💰</div><h2>Isi Saldo</h2></div>
+      </div>
+      <div class="px">
+        <div class="dep-form-card">
+          <div class="dfh">
+            <div class="icon">🏦</div>
+            <div><h3>Topup QRIS Instant</h3><p>Otomatis masuk dalam hitungan menit</p></div>
+          </div>
+          <div class="amount-field">
+            <span class="af-prefix">Rp</span>
+            <input type="number" id="dep-amount" placeholder="0" min="2000" oninput="updateDepPreview()">
+          </div>
+          <div id="dep-preview" class="dep-hint" style="display:none"></div>
+          <div class="dep-hint">ℹ️ &nbsp;<span>Minimal deposit <strong>Rp 2.000</strong>. Biaya admin berlaku sesuai provider QRIS.</span></div>
+          <button class="btn" onclick="createDeposit()">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Buat Tagihan QRIS
+          </button>
+        </div>
+
+        <div class="section-title mt-16">🕐 Riwayat Deposit</div>
+        <div id="dep-hist">
+          <div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">Belum ada riwayat</div><div class="empty-sub">Deposit pertamamu akan muncul di sini</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ACTIVITY ===== -->
+    <div class="page" id="pg-activity">
+      <div class="app-header">
+        <div class="header-logo"><div class="hli">📊</div><h2>Aktivitas</h2></div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="filterAct('all',this)">Semua</button>
+        <button class="filter-chip" onclick="filterAct('pending',this)">⏳ Pending</button>
+        <button class="filter-chip" onclick="filterAct('completed',this)">✅ Selesai</button>
+        <button class="filter-chip" onclick="filterAct('cancelled',this)">❌ Dibatalkan</button>
+      </div>
+      <div id="act-list">
+        <div class="loading"><div class="spinner"></div>Memuat...</div>
+      </div>
+    </div>
+
+    <!-- ===== PROFILE ===== -->
+    <div class="page" id="pg-profile">
+      <div class="app-header">
+        <div class="header-logo"><div class="hli">👤</div><h2>Profil</h2></div>
+      </div>
+      <div class="profile-hero">
+        <div class="pf-avatar" id="pf-av">J</div>
+        <div>
+          <div class="pf-name" id="pf-name">Loading...</div>
+          <div class="pf-email" id="pf-email">...</div>
+          <div class="pf-joined" id="pf-joined"></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val" id="pf-saldo">Rp 0</div><div class="stat-label">Saldo</div></div>
+        <div class="stat-card"><div class="stat-val" id="pf-orders">0x</div><div class="stat-label">Order</div></div>
+        <div class="stat-card"><div class="stat-val" id="pf-deps">0x</div><div class="stat-label">Deposit</div></div>
+      </div>
+      <div class="menu-group">
+        <div class="mg-title">Transaksi</div>
+        <div class="menu-row" onclick="goPage('pg-deposit')"><div class="mr-icon" style="background:rgba(34,197,94,.15)">💰</div><div><div class="mr-label">Isi Saldo</div><div class="mr-sub">Top up via QRIS instant</div></div><div class="mr-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+        <div class="menu-row" onclick="goPage('pg-activity')"><div class="mr-icon" style="background:rgba(59,130,246,.15)">📋</div><div><div class="mr-label">Riwayat Order</div><div class="mr-sub">Semua transaksi kamu</div></div><div class="mr-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+      </div>
+      <div class="menu-group">
+        <div class="mg-title">Lainnya</div>
+        <div class="menu-row" onclick="doLogout()"><div class="mr-icon" style="background:rgba(239,68,68,.15)">🚪</div><div><div class="mr-label" style="color:var(--red)">Keluar Akun</div><div class="mr-sub">Logout dari sesi ini</div></div></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" id="nav-home" onclick="goPage('pg-home')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" id="nav-deposit" onclick="goPage('pg-deposit')">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span>Deposit</span>
+      </div>
+      <div class="nav-center" onclick="goPage('pg-order')">
+        <svg viewBox="0 0 24 24" style="width:28px;height:28px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </div>
+      <div class="nav-item" id="nav-activity" onclick="goPage('pg-activity')">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Aktivitas</span>
+      </div>
+      <div class="nav-item" id="nav-profile" onclick="goPage('pg-profile')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profil</span>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN VIEW
+     ============================================================ -->
+<div id="admin-view" class="view">
+  <!-- Mobile top nav -->
+  <div class="admin-mobile-nav" id="admin-mobile-nav">
+    <div class="amn-item active" onclick="goAdmin('adm-dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="amn-item" onclick="goAdmin('adm-users')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users</div>
+    <div class="amn-item" onclick="goAdmin('adm-orders')"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Orders</div>
+    <div class="amn-item" onclick="goAdmin('adm-deposits')"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Deposit</div>
+    <div class="amn-item" onclick="goAdmin('adm-logs')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Logs</div>
+    <div class="amn-item" onclick="exitAdmin()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Exit</div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-logo">
+      <h2>⚙️ Admin Panel</h2>
+      <p>VirtualSIM Management</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-item active" id="sni-dashboard" onclick="goAdmin('adm-dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="sidebar-nav-item" id="sni-users" onclick="goAdmin('adm-users')">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Manajemen User
+      </div>
+      <div class="sidebar-nav-item" id="sni-orders" onclick="goAdmin('adm-orders')">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Semua Order
+      </div>
+      <div class="sidebar-nav-item" id="sni-deposits" onclick="goAdmin('adm-deposits')">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Semua Deposit
+      </div>
+      <div class="sidebar-nav-item" id="sni-logs" onclick="goAdmin('adm-logs')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Log Saldo
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-nav-item" onclick="exitAdmin()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar ke Beranda
+      </div>
+    </div>
+  </aside>
+
+  <!-- Admin Content -->
+  <div class="admin-content">
+
+    <!-- DASHBOARD -->
+    <div class="admin-page active" id="adm-dashboard">
+      <div class="admin-header">
+        <h1>Dashboard</h1>
+        <p>Ringkasan data dan statistik VirtualSIM</p>
+      </div>
+      <div class="stat-grid" id="adm-stats">
+        <div class="loading"><div class="spinner"></div>Memuat...</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="adm-dash-tables">
+        <div>
+          <div class="section-title mb-8">Order Terbaru</div>
+          <div class="table-wrap" id="dash-recent-orders"><div class="loading"><div class="spinner sm"></div></div></div>
+        </div>
+        <div>
+          <div class="section-title mb-8">Deposit Terbaru</div>
+          <div class="table-wrap" id="dash-recent-deps"><div class="loading"><div class="spinner sm"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="admin-page" id="adm-users">
+      <div class="admin-header"><h1>Manajemen User</h1><p>Kelola semua pengguna VirtualSIM</p></div>
+      <div class="admin-toolbar">
+        <div class="admin-search">
+          <div class="asi"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <input type="text" placeholder="Cari nama atau email..." oninput="searchUsers(this.value)">
+        </div>
+        <button class="btn sm" onclick="loadAdminUsers()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap" id="users-table"><div class="loading"><div class="spinner"></div>Memuat...</div></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="admin-page" id="adm-orders">
+      <div class="admin-header"><h1>Semua Order</h1><p>Monitor seluruh transaksi nomor virtual</p></div>
+      <div class="admin-toolbar">
+        <div class="admin-search">
+          <div class="asi"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <input type="text" placeholder="Cari user, layanan, nomor..." oninput="searchOrders(this.value)">
+        </div>
+        <select class="select-sm" onchange="filterOrders(this.value)">
+          <option value="all">Semua Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <button class="btn sm" onclick="loadAdminOrders()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap" id="orders-table"><div class="loading"><div class="spinner"></div>Memuat...</div></div>
+    </div>
+
+    <!-- DEPOSITS -->
+    <div class="admin-page" id="adm-deposits">
+      <div class="admin-header"><h1>Semua Deposit</h1><p>Monitor seluruh transaksi top up saldo</p></div>
+      <div class="admin-toolbar">
+        <div class="admin-search">
+          <div class="asi"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <input type="text" placeholder="Cari nama atau email..." oninput="searchDeps(this.value)">
+        </div>
+        <select class="select-sm" onchange="filterDeps(this.value)">
+          <option value="all">Semua Status</option>
+          <option value="success">Success</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <button class="btn sm" onclick="loadAdminDeps()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap" id="deps-table"><div class="loading"><div class="spinner"></div>Memuat...</div></div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="admin-page" id="adm-logs">
+      <div class="admin-header"><h1>Log Saldo</h1><p>Riwayat perubahan saldo oleh admin</p></div>
+      <button class="btn sm mb-12" onclick="loadAdminLogs()">🔄 Refresh</button>
+      <div class="table-wrap" id="logs-table"><div class="loading"><div class="spinner"></div>Memuat...</div></div>
+    </div>
+
+  </div><!-- end admin-content -->
+</div><!-- end admin-view -->
+
+<!-- ============================================================
+     SHEETS (USER)
+     ============================================================ -->
+
+<!-- Country Sheet -->
+<div class="overlay" id="sh-country" onclick="closeSheet('sh-country')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span id="sh-country-title">🌍 Pilih Negara</span><button class="sheet-close" onclick="closeSheet('sh-country')">✕</button></div>
+    <div id="country-list"><div class="loading"><div class="spinner"></div>Memuat...</div></div>
+  </div>
+</div>
+
+<!-- Price Sheet -->
+<div class="overlay" id="sh-price" onclick="closeSheet('sh-price')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span>💰 Pilih Harga</span><button class="sheet-close" onclick="closeSheet('sh-price')">✕</button></div>
+    <div id="price-meta" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
+    <div id="price-list"></div>
+  </div>
+</div>
+
+<!-- Operator Sheet -->
+<div class="overlay" id="sh-op" onclick="closeSheet('sh-op')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span>📶 Pilih Operator</span><button class="sheet-close" onclick="closeSheet('sh-op')">✕</button></div>
+    <div id="op-meta" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
+    <div id="op-list"></div>
+  </div>
+</div>
+
+<!-- Confirm Sheet -->
+<div class="overlay" id="sh-confirm" onclick="closeSheet('sh-confirm')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span>✅ Konfirmasi Order</span><button class="sheet-close" onclick="closeSheet('sh-confirm')">✕</button></div>
+    <div id="confirm-detail" class="confirm-box"></div>
+    <div id="saldo-alert-box"></div>
+    <button class="btn success" id="btn-order" onclick="confirmOrder()">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>
+      Pesan Nomor Sekarang
+    </button>
+    <button class="btn ghost" style="margin-top:8px" onclick="closeSheet('sh-confirm')">Batal</button>
+  </div>
+</div>
+
+<!-- Active Order Sheet -->
+<div class="overlay" id="sh-order">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span>📱 Nomor Virtual</span><button class="sheet-close" onclick="closeOrderSheet()">✕</button></div>
+    <div class="ao-box">
+      <div class="ao-service-label" id="ao-srv"></div>
+      <div class="ao-phone" id="ao-phone">+62...</div>
+      <button class="copy-chip" onclick="copyPhone()">📋 Salin Nomor</button>
+      <hr class="sep">
+      <div id="ao-otp-area">
+        <div class="ao-waiting"><div class="spinner sm"></div> Menunggu kode OTP masuk...</div>
+      </div>
+      <div class="ao-timer" id="ao-timer"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn ghost sm" style="flex:1" onclick="cancelCurrentOrder()">❌ Batalkan</button>
+      <button class="btn sm" style="flex:2" onclick="manualCheckOTP()">🔄 Cek OTP Manual</button>
+    </div>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Auto-cek setiap 5 detik. Refund otomatis jika OTP tidak masuk.</p>
+  </div>
+</div>
+
+<!-- QRIS Sheet -->
+<div class="overlay" id="sh-qris">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span>🏦 Scan QRIS</span><button class="sheet-close" onclick="cancelDeposit()">✕</button></div>
+    <div class="qr-img-wrap"><img id="qr-img" src="" alt="QRIS Code"></div>
+    <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:6px" id="qr-id-label"></div>
+    <div class="qr-detail">
+      <div class="qr-row"><span class="qrl">Total Bayar</span><span class="qrv" id="qr-total"></span></div>
+      <div class="qr-row"><span class="qrl">Biaya Admin</span><span class="qrv" style="color:var(--yellow)" id="qr-fee"></span></div>
+      <div class="qr-row"><span class="qrl">Saldo Diterima</span><span class="qrv" style="color:var(--green)" id="qr-recv"></span></div>
+    </div>
+    <div class="dep-exp-bar">⏳ &nbsp;Kadaluarsa: <strong id="qr-timer">--:--</strong></div>
+    <div class="auto-check-note"><div class="spinner sm"></div> Auto cek pembayaran setiap 5 detik</div>
+    <button class="btn danger" onclick="cancelDeposit()">❌ Batalkan Pembayaran</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="adm-modal" onclick="closeAdmModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span id="adm-modal-title">Detail User</span>
+      <button class="modal-close" onclick="closeAdmModal()">✕</button>
+    </div>
+    <div id="adm-modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+let ME = {};
+let allSrv = [];
+let allOrders = [];
+let allAdmOrders = [], allAdmDeps = [], allAdmUsers = [];
+let curSrv = null, curCountry = null, curProvider = null, curOperator = null, curPrice = 0;
+let curOrderId = null, curDepId = null;
+let otpPoll = null, depPoll = null, timerInt = null, depTimerInt = null;
+
+// ================================================================
+// API
+// ================================================================
+async function POST(url, data={}) {
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+  return r.json();
+}
+async function GET(url) {
+  const r = await fetch(url);
+  return r.json();
+}
+
+// ================================================================
+// AUTH
+// ================================================================
+function switchAuthTab(t) {
+  document.getElementById('tab-login').classList.toggle('hidden', t!=='login');
+  document.getElementById('tab-register').classList.toggle('hidden', t!=='register');
+  document.getElementById('tab-login-btn').classList.toggle('active', t==='login');
+  document.getElementById('tab-reg-btn').classList.toggle('active', t==='register');
+}
+async function doLogin() {
+  const email=val('l-email'), pass=val('l-pass');
+  setBtn('l-btn','⏳ Masuk...',true);
+  const res = await POST('/api/login',{email,password:pass});
+  setBtn('l-btn','<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Masuk Sekarang',false);
+  if(res.ok) { if(res.admin) initAdmin(); else initApp(); }
+  else showErr('l-err',res.msg);
+}
+async function doRegister() {
+  const name=val('r-name'), email=val('r-email'), pass=val('r-pass'), admin_code=val('r-admin')||'';
+  setBtn('r-btn','⏳ Mendaftar...',true);
+  const res = await POST('/api/register',{name,email,password:pass,admin_code});
+  setBtn('r-btn','<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Buat Akun',false);
+  if(res.ok) { if(res.admin) initAdmin(); else initApp(); }
+  else showErr('r-err',res.msg);
+}
+async function doLogout() {
+  await POST('/api/logout');
+  location.reload();
+}
+function initApp() {
+  show('auth-view',false); show('app-view',true); show('admin-view',false);
+  loadHome(); loadServices();
+}
+function initAdmin() {
+  show('auth-view',false); show('app-view',false); show('admin-view',true);
+  loadAdminDash(); loadAdminUsers(); loadAdminOrders(); loadAdminDeps(); loadAdminLogs();
+}
+function exitAdmin() {
+  initApp();
+}
+
+// ================================================================
+// NAVIGATION (User)
+// ================================================================
+const PAGE_NAV = {'pg-home':'nav-home','pg-deposit':'nav-deposit','pg-activity':'nav-activity','pg-profile':'nav-profile'};
+function goPage(id) {
+  document.querySelectorAll('#app .page').forEach(p=>p.classList.remove('active'));
+  el(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(PAGE_NAV[id]) el(PAGE_NAV[id]).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='pg-home') loadHome();
+  if(id==='pg-order') loadServices();
+  if(id==='pg-activity') loadActivity();
+  if(id==='pg-deposit') loadDepHistory();
+  if(id==='pg-profile') loadProfile();
+}
+
+// ================================================================
+// SHEETS
+// ================================================================
+function openSheet(id){ el(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeSheet(id){ el(id).classList.remove('open'); document.body.style.overflow=''; }
+
+// ================================================================
+// TOAST
+// ================================================================
+let toastT;
+function toast(msg, type='') {
+  const t = el('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// ================================================================
+// HOME
+// ================================================================
+async function loadHome() {
+  const res = await GET('/api/me');
+  if(!res.ok) return;
+  ME = res.data;
+  el('home-saldo').textContent = ME.saldo_f;
+  loadPending();
+}
+async function loadPending() {
+  const res = await GET('/api/history');
+  if(!res.ok) return;
+  allOrders = res.data;
+  const pending = res.data.filter(o=>o.status==='pending');
+  const el2 = el('home-pending');
+  if(!pending.length) { el2.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada pesanan aktif</div></div>`; return; }
+  el2.innerHTML = pending.map(o=>orderCardHTML(o,true)).join('');
+}
+function orderCardHTML(o, showBtns=false) {
+  return `<div class="order-card status-${o.status} mb-8">
+    <div class="oc-top"><span class="oc-service">${o.service}</span><span class="badge ${o.status}">${{pending:'⏳ Pending',completed:'✅ Selesai',cancelled:'❌ Batal'}[o.status]||o.status}</span></div>
+    <div class="oc-phone">${o.phone_number}</div>
+    ${o.otp_code&&o.otp_code!=='-'?`<div class="oc-otp">${o.otp_code}</div>`:''}
+    <div class="oc-info"><span>🌍 ${o.country}</span><span>📶 ${o.operator}</span><span>💰 ${o.price_f}</span><span>🕐 ${o.created_at?.substring(0,16)||''}</span></div>
+    ${showBtns&&o.status==='pending'?`<div class="oc-btns">
+      <button class="btn xs" onclick="openExistOrder('${o.order_id}','${escQ(o.phone_number)}','${escQ(o.service)}','${escQ(o.country)}')">📩 Cek OTP</button>
+      <button class="btn xs danger" onclick="cancelOrderById('${o.order_id}')">❌ Batal</button>
+    </div>`:''}
+  </div>`;
+}
+
+// ================================================================
+// SERVICES / ORDER FLOW
+// ================================================================
+const COLORS=['#25d366','#2ca5e0','#e1306c','#1877f2','#9b59b6','#ee4d2d','#008800','#ff6600','#cc0000','#0088cc','#ff0000','#128c7e'];
+const EMOJIS={whatsapp:'💬',telegram:'✈️',instagram:'📸',facebook:'👤',tiktok:'🎵',shopee:'🛒',gojek:'🛵',grab:'🚗',netflix:'🎬',twitter:'🐦',discord:'💬',google:'🔵',gmail:'📧',youtube:'▶️',amazon:'📦',paypal:'💳',steam:'🎮',uber:'🚖',tinder:'🔥',dana:'💳',ovo:'💜',gopay:'🟢',lazada:'🟠',tokopedia:'🟢',twitter:'🐦',x:'🐦',line:'💚',viber:'📞',yahoo:'💜',snapchat:'👻',ebay:'🛍️',airbnb:'🏠',microsoft:'🪟',blizzard:'🎮',apple:'🍎',twitter:'🐦',default:'📱'};
+function getEmoji(name){const n=name.toLowerCase();for(const[k,v] of Object.entries(EMOJIS))if(n.includes(k))return v;return EMOJIS.default;}
+function getColor(i){return COLORS[i%COLORS.length]+'25';}
+
+async function loadServices() {
+  if(allSrv.length>0){renderSrv(allSrv);return;}
+  el('srv-grid').innerHTML=`<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Memuat layanan...</div>`;
+  const res = await GET('/api/services');
+  if(!res.ok){el('srv-grid').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--red)">❌ Gagal memuat. Cek API Key.</div>`;return;}
+  allSrv = res.data;
+  renderSrv(allSrv);
+}
+function renderSrv(list) {
+  el('srv-grid').innerHTML = list.map((s,i)=>`<div class="app-chip" onclick="startOrder('${s.service_code}','${escQ(s.service_name)}')">
+    <div class="ac-icon" style="background:${getColor(i)}">${getEmoji(s.service_name)}</div>
+    <span>${s.service_name}</span>
+  </div>`).join('');
+}
+function filterSrv(){
+  const q=val('srv-q').toLowerCase();
+  renderSrv(q?allSrv.filter(s=>s.service_name.toLowerCase().includes(q)):allSrv);
+}
+
+async function startOrder(code, name) {
+  curSrv = {code, name};
+  el('sh-country-title').textContent = `🌍 Pilih Negara — ${name}`;
+  el('country-list').innerHTML=`<div class="loading"><div class="spinner"></div>Memuat negara...</div>`;
+  openSheet('sh-country');
+  const res = await GET(`/api/countries?sid=${code}`);
+  if(!res.ok){el('country-list').innerHTML=`<p style="color:var(--red);text-align:center;padding:20px">❌ ${res.msg||'Gagal memuat negara'}</p>`;return;}
+  if(!res.data.length){el('country-list').innerHTML=`<p style="color:var(--text3);text-align:center;padding:20px">⚠️ Tidak ada negara tersedia</p>`;return;}
+  el('country-list').innerHTML = res.data.map(c=>{
+    const cheapest = (c.pricelist||[]).filter(p=>p.available&&p.stock>0).sort((a,b)=>a.price-b.price)[0];
+    if(!cheapest)return'';
+    return `<div class="list-item" onclick='selectCountry(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
+      <div class="li-left"><div class="li-icon">🌍</div><div><div class="li-name">${c.name} (${c.prefix})</div><div class="li-sub">Stok: ${c.stock_total} nomor</div></div></div>
+      <div style="text-align:right"><div class="li-price">${cheapest.price_f}</div><div style="font-size:10px;color:var(--text3)">mulai dari</div></div>
+    </div>`;
+  }).join('');
+}
+
+function selectCountry(c) {
+  curCountry = c;
+  closeSheet('sh-country');
+  const providers = (c.pricelist||[]).filter(p=>p.available&&p.stock>0).sort((a,b)=>a.price-b.price);
+  el('price-meta').textContent = `${curSrv.name} · ${c.name} (${c.prefix})`;
+  el('price-list').innerHTML = providers.map(p=>`
+    <div class="list-item" onclick='selectPrice(${JSON.stringify(p).replace(/"/g,"&quot;")})'>
+      <div><div class="li-name">${p.price_f}</div><div class="li-sub">Provider ${p.provider_id} · Server ${p.server_id||'-'}</div></div>
+      <div class="li-stock">Stok ${p.stock}</div>
+    </div>`).join('');
+  if(!providers.length) el('price-list').innerHTML='<p style="color:var(--text3);padding:20px;text-align:center">⚠️ Tidak ada stok tersedia</p>';
+  openSheet('sh-price');
+}
+
+async function selectPrice(p) {
+  curProvider = p; curPrice = p.price;
+  closeSheet('sh-price');
+  el('op-meta').textContent = `${curSrv.name} · ${curCountry.name} · ${p.price_f}`;
+  el('op-list').innerHTML=`<div class="loading"><div class="spinner"></div>Memuat operator...</div>`;
+  openSheet('sh-op');
+  const res = await GET(`/api/operators?country=${encodeURIComponent(curCountry.name)}&pid=${p.provider_id}`);
+  if(!res.ok||!res.data?.length){el('op-list').innerHTML='<p style="color:var(--red);padding:20px;text-align:center">❌ Tidak ada operator</p>';return;}
+  el('op-list').innerHTML = res.data.map(op=>`
+    <div class="list-item" onclick='selectOperator(${JSON.stringify(op).replace(/"/g,"&quot;")})'>
+      <div class="li-left"><div style="width:10px;height:10px;background:var(--green);border-radius:50%;flex-shrink:0"></div><div class="li-name">${op.name}</div></div>
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:var(--text3);stroke-width:2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('');
+}
+
+function selectOperator(op) {
+  curOperator = op;
+  closeSheet('sh-op');
+  const enough = (ME.saldo||0) >= curPrice;
+  el('confirm-detail').innerHTML = `
+    <div class="confirm-row"><span class="cr-label">Layanan</span><span class="cr-val">${curSrv.name}</span></div>
+    <div class="confirm-row"><span class="cr-label">Negara</span><span class="cr-val">${curCountry.name} (${curCountry.prefix})</span></div>
+    <div class="confirm-row"><span class="cr-label">Operator</span><span class="cr-val">${op.name}</span></div>
+    <div class="confirm-row"><span class="cr-label">Provider</span><span class="cr-val">${curProvider.provider_id}</span></div>
+    <div class="confirm-row"><span class="cr-label">Stok</span><span class="cr-val">${curProvider.stock} nomor</span></div>
+    <div class="confirm-row"><span class="cr-label">Saldo Kamu</span><span class="cr-val">${ME.saldo_f||'Rp 0'}</span></div>
+    <div class="confirm-row"><span class="cr-label">Total Bayar</span><span class="cr-price">${curProvider.price_f}</span></div>`;
+  el('saldo-alert-box').innerHTML = `<div class="saldo-alert ${enough?'ok':'err'}">${enough?'✅ Saldo mencukupi untuk transaksi ini':'❌ Saldo tidak cukup! Silakan top up terlebih dahulu.'}</div>`;
+  const btn = el('btn-order');
+  btn.disabled = !enough;
+  btn.style.opacity = enough?'1':'0.5';
+  openSheet('sh-confirm');
+}
+
+async function confirmOrder() {
+  const btn = el('btn-order');
+  btn.disabled = true; btn.textContent = '⏳ Memproses...';
+  const res = await POST('/api/order', { nid: curCountry.number_id, pid: curProvider.provider_id, oid: curOperator.id, price: curPrice });
+  btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg> Pesan Nomor Sekarang';
+  btn.disabled = false;
+  if(!res.ok){toast('❌ '+res.msg,'fail');return;}
+  closeSheet('sh-confirm');
+  ME.saldo = res.data.saldo; ME.saldo_f = res.data.saldo_f;
+  el('home-saldo').textContent = res.data.saldo_f;
+  curOrderId = res.data.order_id;
+  showOrderSheet(res.data);
+}
+
+function showOrderSheet(d) {
+  el('ao-srv').textContent = `${d.service} · ${d.country} · ${d.operator}`;
+  el('ao-phone').textContent = d.phone;
+  el('ao-otp-area').innerHTML = `<div class="ao-waiting"><div class="spinner sm"></div> Menunggu kode OTP masuk...</div>`;
+  el('ao-timer').textContent = '';
+  openSheet('sh-order');
+  startOTPTimer(d.expires||15);
+  startOTPPoll();
+}
+function openExistOrder(oid, phone, service, country) {
+  curOrderId = oid;
+  el('ao-srv').textContent = `${service} · ${country}`;
+  el('ao-phone').textContent = phone;
+  el('ao-otp-area').innerHTML = `<div class="ao-waiting"><div class="spinner sm"></div> Menunggu kode OTP masuk...</div>`;
+  el('ao-timer').textContent = '';
+  openSheet('sh-order');
+  startOTPPoll();
+}
+function closeOrderSheet() {
+  clearInterval(otpPoll); clearInterval(timerInt);
+  closeSheet('sh-order');
+}
+function copyPhone() {
+  navigator.clipboard.writeText(el('ao-phone').textContent);
+  toast('✅ Nomor disalin!','ok');
+}
+function startOTPTimer(mins) {
+  clearInterval(timerInt);
+  let secs = mins*60;
+  timerInt = setInterval(()=>{
+    secs--;
+    if(secs<=0){clearInterval(timerInt);el('ao-timer').textContent='⏰ Waktu habis!';return;}
+    const m=Math.floor(secs/60),s=secs%60;
+    el('ao-timer').textContent=`⏳ Kadaluarsa: ${m}:${String(s).padStart(2,'0')}`;
+  },1000);
+}
+function startOTPPoll() {
+  clearInterval(otpPoll);
+  otpPoll = setInterval(async()=>{
+    const ok = await checkOTPOnce();
+    if(ok) clearInterval(otpPoll);
+  },5000);
+}
+async function checkOTPOnce() {
+  if(!curOrderId) return false;
+  const res = await GET(`/api/check_otp?oid=${curOrderId}`);
+  if(res.ok && res.otp) {
+    clearInterval(timerInt);
+    el('ao-otp-area').innerHTML = `
+      <div style="font-size:12px;color:var(--green);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">✅ OTP Diterima!</div>
+      <div class="ao-otp">${res.otp}</div>
+      <button class="copy-chip" onclick="navigator.clipboard.writeText('${res.otp}');toast('✅ OTP disalin!','ok')">📋 Salin OTP</button>`;
+    el('ao-timer').textContent='';
+    toast('🎉 OTP berhasil diterima!','ok');
+    loadHome();
+    return true;
+  }
+  return false;
+}
+async function manualCheckOTP() { await checkOTPOnce(); }
+async function cancelCurrentOrder() {
+  if(!curOrderId)return;
+  await cancelOrderById(curOrderId);
+  closeOrderSheet();
+}
+async function cancelOrderById(oid) {
+  const res = await POST('/api/cancel_order',{oid});
+  if(res.ok){toast(`✅ Dibatalkan! Refund ${res.refund}`,'ok');ME.saldo_f=res.saldo;el('home-saldo').textContent=res.saldo;loadHome();}
+  else toast('❌ '+res.msg,'fail');
+}
+
+// ================================================================
+// DEPOSIT
+// ================================================================
+function updateDepPreview() {
+  const amt = parseInt(val('dep-amount'));
+  const p = el('dep-preview');
+  if(!amt||amt<2000){p.style.display='none';return;}
+  p.style.display='flex';
+  p.innerHTML = `💡 &nbsp;<span>Nominal: <strong>Rp ${amt.toLocaleString('id-ID')}</strong> · Estimasi total bayar: <strong>Rp ${(amt+500).toLocaleString('id-ID')}</strong></span>`;
+}
+async function createDeposit() {
+  const amount = parseInt(val('dep-amount'));
+  if(!amount||amount<2000){toast('❌ Minimal deposit Rp 2.000','fail');return;}
+  const res = await POST('/api/deposit',{amount});
+  if(!res.ok){toast('❌ '+res.msg,'fail');return;}
+  const d=res.data;
+  curDepId=d.dep_id;
+  el('qr-img').src=d.qr;
+  el('qr-id-label').textContent='ID: '+d.dep_id;
+  el('qr-total').textContent=d.total_f;
+  el('qr-fee').textContent=d.fee_f;
+  el('qr-recv').textContent=d.recv_f;
+  openSheet('sh-qris');
+  startDepTimer(d.exp);
+  startDepPoll(d.dep_id);
+  el('dep-amount').value='';
+  el('dep-preview').style.display='none';
+  loadDepHistory();
+}
+function startDepTimer(expTs) {
+  clearInterval(depTimerInt);
+  depTimerInt = setInterval(()=>{
+    const secs=Math.max(0,expTs-Math.floor(Date.now()/1000));
+    if(!secs){clearInterval(depTimerInt);el('qr-timer').textContent='Kadaluarsa!';return;}
+    const m=Math.floor(secs/60),s=secs%60;
+    el('qr-timer').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  },1000);
+}
+function startDepPoll(did) {
+  clearInterval(depPoll);
+  depPoll = setInterval(async()=>{
+    const res = await GET(`/api/check_dep?did=${did}`);
+    if(res.ok&&res.status==='success') {
+      clearInterval(depPoll); clearInterval(depTimerInt);
+      closeSheet('sh-qris');
+      ME.saldo_f=res.saldo_f; ME.saldo=res.saldo;
+      el('home-saldo').textContent=res.saldo_f;
+      toast(`🎉 Deposit berhasil! +${res.recv_f}`,'ok');
+      loadDepHistory();
+    }
+  },5000);
+}
+async function cancelDeposit() {
+  if(curDepId) await POST('/api/cancel_dep',{did:curDepId});
+  clearInterval(depPoll); clearInterval(depTimerInt);
+  closeSheet('sh-qris'); curDepId=null;
+  loadDepHistory(); toast('Pembayaran dibatalkan','');
+}
+async function loadDepHistory() {
+  const res = await GET('/api/dep_history');
+  const el2 = el('dep-hist');
+  if(!res.ok||!res.data?.length){el2.innerHTML=`<div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">Belum ada riwayat</div></div>`;return;}
+  el2.innerHTML = res.data.map(d=>{
+    const sc={pending:'var(--yellow)',success:'var(--green)',cancelled:'var(--red)'}[d.status]||'var(--text2)';
+    const si={pending:'⏳',success:'✅',cancelled:'❌'}[d.status]||'❓';
+    return `<div class="dep-history-row">
+      <div class="dhr-l"><div class="dhr-amount" style="color:${sc}">${si} ${d.amount_f}</div><div class="dhr-id">ID: ${d.deposit_id||'-'} · ${d.method}</div></div>
+      <div class="dhr-r"><div class="dhr-recv" style="color:${d.status==='success'?'var(--green)':'var(--text3)'}">${d.status==='success'?'+'+d.recv_f:d.status}</div><div class="dhr-date">${d.created_at?.substring(0,16)||''}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// ACTIVITY
+// ================================================================
+async function loadActivity() {
+  el('act-list').innerHTML=`<div class="loading"><div class="spinner"></div>Memuat...</div>`;
+  const res = await GET('/api/history');
+  if(!res.ok){el('act-list').innerHTML='<p style="text-align:center;padding:20px;color:var(--red)">Gagal memuat</p>';return;}
+  allOrders = res.data;
+  renderActivity('all');
+}
+function filterAct(f,btn) {
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderActivity(f);
+}
+function renderActivity(f) {
+  const list = f==='all'?allOrders:allOrders.filter(o=>o.status===f);
+  if(!list.length){el('act-list').innerHTML=`<div class="empty-state" style="padding:40px 16px"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada data</div></div>`;return;}
+  el('act-list').innerHTML = list.map(o=>{
+    const sc={pending:'var(--yellow)',completed:'var(--green)',cancelled:'var(--red)'}[o.status];
+    const sl={pending:'⏳ Menunggu OTP',completed:'✅ Selesai — OTP Diterima',cancelled:'❌ Dibatalkan'}[o.status]||o.status;
+    return `<div class="activity-item" onclick="${o.status==='pending'?`openExistOrder('${o.order_id}','${escQ(o.phone_number)}','${escQ(o.service)}','${escQ(o.country)}')`:''}" style="${o.status==='pending'?'cursor:pointer':''}">
+      <div class="ai-ico" style="background:rgba(59,130,246,.12)">📱</div>
+      <div style="flex:1">
+        <div class="ai-service">${o.service}</div>
+        <div class="ai-phone">${o.phone_number}</div>
+        ${o.otp_code&&o.otp_code!=='-'?`<div class="ai-otp">${o.otp_code}</div>`:''} 
+        <div style="font-size:11px;color:${sc};margin-top:3px;font-weight:600">${sl}</div>
+      </div>
+      <div class="ai-price-wrap">
+        <div class="ai-price">${o.price_f}</div>
+        <div class="ai-date">${o.created_at?.substring(0,10)||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// PROFILE
+// ================================================================
+async function loadProfile() {
+  const res = await GET('/api/me');
+  if(!res.ok) return;
+  ME = res.data;
+  const init = ME.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  el('pf-av').textContent = init;
+  el('pf-name').textContent = ME.name;
+  el('pf-email').textContent = ME.email;
+  el('pf-joined').textContent = '📅 Bergabung ' + new Date(ME.joined).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  el('pf-saldo').textContent = ME.saldo_f;
+  el('pf-orders').textContent = ME.total_orders+'x';
+  el('pf-deps').textContent = ME.total_deps+'x';
+}
+
+// ================================================================
+// ADMIN
+// ================================================================
+function goAdmin(id) {
+  document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
+  el(id).classList.add('active');
+  document.querySelectorAll('.sidebar-nav-item').forEach(n=>n.classList.remove('active'));
+  const sniMap={'adm-dashboard':'sni-dashboard','adm-users':'sni-users','adm-orders':'sni-orders','adm-deposits':'sni-deposits','adm-logs':'sni-logs'};
+  if(sniMap[id]) el(sniMap[id]).classList.add('active');
+  document.querySelectorAll('.amn-item').forEach(n=>n.classList.remove('active'));
+  const amnItems=document.querySelectorAll('.amn-item');
+  const amnMap={'adm-dashboard':0,'adm-users':1,'adm-orders':2,'adm-deposits':3,'adm-logs':4};
+  if(amnMap[id]!==undefined) amnItems[amnMap[id]]?.classList.add('active');
+}
+
+async function loadAdminDash() {
+  const res = await GET('/api/admin/stats');
+  if(!res.ok) return;
+  const d = res.data;
+  el('adm-stats').innerHTML = `
+    <div class="stat-box blue"><div class="sb-icon">👥</div><div class="sb-label">Total User</div><div class="sb-value">${d.total_users}</div><div class="sb-sub">${d.active_users} aktif</div></div>
+    <div class="stat-box green"><div class="sb-icon">💰</div><div class="sb-label">Total Deposit</div><div class="sb-value" style="font-size:18px">${d.total_depo}</div><div class="sb-sub">${d.total_depo_count}x transaksi</div></div>
+    <div class="stat-box yellow"><div class="sb-icon">🛒</div><div class="sb-label">Total Order</div><div class="sb-value">${d.total_orders}</div><div class="sb-sub">${d.completed_orders} selesai</div></div>
+    <div class="stat-box red"><div class="sb-icon">⏳</div><div class="sb-label">Order Pending</div><div class="sb-value">${d.pending_orders}</div><div class="sb-sub">Menunggu OTP</div></div>
+    <div class="stat-box cyan"><div class="sb-icon">📅</div><div class="sb-label">Order Hari Ini</div><div class="sb-value">${d.today_orders}</div><div class="sb-sub">${d.today_revenue}</div></div>
+    <div class="stat-box blue"><div class="sb-icon">💵</div><div class="sb-label">Deposit Hari Ini</div><div class="sb-value" style="font-size:18px">${d.today_depo}</div><div class="sb-sub">Masuk hari ini</div></div>`;
+
+  // Recent orders
+  const ores = await GET('/api/admin/orders?status=all');
+  if(ores.ok) {
+    const recent = ores.data.slice(0,5);
+    el('dash-recent-orders').innerHTML = `<table class="admin-table"><thead><tr><th>User</th><th>Layanan</th><th>Status</th><th>Harga</th></tr></thead><tbody>
+      ${recent.map(o=>`<tr>
+        <td><div class="td-name">${o.user_name}</div><div class="td-email">${o.user_email}</div></td>
+        <td>${o.service}</td>
+        <td><span class="badge ${o.status}">${o.status}</span></td>
+        <td class="td-saldo">${o.price_f}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+
+  // Recent deposits
+  const dres = await GET('/api/admin/deposits?status=all');
+  if(dres.ok) {
+    const recent = dres.data.slice(0,5);
+    el('dash-recent-deps').innerHTML = `<table class="admin-table"><thead><tr><th>User</th><th>Nominal</th><th>Status</th></tr></thead><tbody>
+      ${recent.map(d=>`<tr>
+        <td><div class="td-name">${d.user_name}</div><div class="td-email">${d.user_email}</div></td>
+        <td class="td-saldo">${d.amount_f}</td>
+        <td><span class="badge ${d.status==='success'?'completed':d.status}">${d.status}</span></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+}
+
+async function loadAdminUsers(q='') {
+  const res = await GET('/api/admin/users'+(q?`?q=${encodeURIComponent(q)}`:''));
+  if(!res.ok) return;
+  allAdmUsers = res.data;
+  renderUsersTable(allAdmUsers);
+}
+function searchUsers(q){ loadAdminUsers(q); }
+function renderUsersTable(users) {
+  if(!users.length){el('users-table').innerHTML='<div class="loading">Tidak ada user</div>';return;}
+  el('users-table').innerHTML=`<table class="admin-table"><thead><tr>
+    <th>User</th><th>Saldo</th><th>Order</th><th>Total Deposit</th><th>Status</th><th>Bergabung</th><th>Aksi</th>
+  </tr></thead><tbody>
+  ${users.map(u=>`<tr>
+    <td><div class="td-name">${u.name}</div><div class="td-email">${u.email}</div></td>
+    <td class="td-saldo">${u.saldo_f}</td>
+    <td>${u.total_orders}x</td>
+    <td>${u.total_depo_f}</td>
+    <td>${u.is_banned?'<span class="badge cancelled">Banned</span>':'<span class="badge completed">Aktif</span>'}</td>
+    <td style="font-size:11px;color:var(--text3)">${u.created_at?.substring(0,10)||''}</td>
+    <td><div class="td-actions">
+      <button class="btn xs" onclick="openUserModal(${u.id})">Detail</button>
+      <button class="btn xs" onclick="openSaldoModal(${u.id},'${escQ(u.name)}',${u.saldo})" style="background:var(--green)">Saldo</button>
+      <button class="btn xs ${u.is_banned?'success':'danger'}" onclick="toggleBan(${u.id},${u.is_banned?0:1},'${escQ(u.name)}')">${u.is_banned?'Unban':'Ban'}</button>
+    </div></td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function openUserModal(uid) {
+  el('adm-modal-title').textContent = '👤 Detail User';
+  el('adm-modal-body').innerHTML='<div class="loading"><div class="spinner"></div>Memuat...</div>';
+  el('adm-modal').classList.add('open');
+  const res = await GET(`/api/admin/user/${uid}`);
+  if(!res.ok){el('adm-modal-body').innerHTML='<p style="color:var(--red)">Gagal memuat</p>';return;}
+  const {user, orders, deposits, logs} = res.data;
+  el('adm-modal-body').innerHTML = `
+    <div class="info-row"><span class="ir-label">Nama</span><span class="ir-val">${user.name}</span></div>
+    <div class="info-row"><span class="ir-label">Email</span><span class="ir-val">${user.email}</span></div>
+    <div class="info-row"><span class="ir-label">Saldo</span><span class="ir-val" style="color:var(--blue);font-weight:800">${user.saldo_f}</span></div>
+    <div class="info-row"><span class="ir-label">Total Order</span><span class="ir-val">${orders.length}x</span></div>
+    <div class="info-row"><span class="ir-label">Total Deposit</span><span class="ir-val">${deposits.length}x</span></div>
+    <div class="info-row"><span class="ir-label">Status</span><span class="ir-val">${user.is_banned?'<span style="color:var(--red)">🚫 Banned</span>':'<span style="color:var(--green)">✅ Aktif</span>'}</span></div>
+    <div class="info-row"><span class="ir-label">Bergabung</span><span class="ir-val">${user.created_at?.substring(0,10)||''}</span></div>
+    <hr class="sep">
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">Order Terbaru</div>
+    ${orders.slice(0,5).map(o=>`<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span style="font-weight:700">${o.service}</span><span class="badge ${o.status}">${o.status}</span></div>
+      <div style="color:var(--text3);margin-top:3px">${o.phone_number} · ${o.price_f}</div>
+    </div>`).join('')||'<p style="color:var(--text3);font-size:12px">Belum ada order</p>'}
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn sm success" onclick="openSaldoModal(${user.id},'${escQ(user.name)}',${user.saldo});closeAdmModal()">💰 Kelola Saldo</button>
+      <button class="btn sm ${user.is_banned?'success':'danger'}" onclick="toggleBan(${user.id},${user.is_banned?0:1},'${escQ(user.name)}');closeAdmModal()">${user.is_banned?'Unban':'Ban'}</button>
+    </div>`;
+}
+
+function openSaldoModal(uid, name, currentSaldo) {
+  el('adm-modal-title').textContent = `💰 Kelola Saldo — ${name}`;
+  el('adm-modal-body').innerHTML = `
+    <div class="info-row"><span class="ir-label">User</span><span class="ir-val">${name}</span></div>
+    <div class="info-row" style="border:none"><span class="ir-label">Saldo Sekarang</span><span class="ir-val" style="color:var(--blue);font-weight:800">Rp ${Number(currentSaldo).toLocaleString('id-ID')}</span></div>
+    <hr class="sep">
+    <div class="field"><label>Jumlah (Rp)</label><input type="number" id="saldo-amt" placeholder="Contoh: 10000" min="1"></div>
+    <div class="field"><label>Catatan (opsional)</label><input type="text" id="saldo-note" placeholder="Contoh: Bonus, Refund, dll"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn success sm" onclick="doSaldo(${uid},'add')">➕ Tambah</button>
+      <button class="btn danger sm" onclick="doSaldo(${uid},'reduce')">➖ Kurangi</button>
+      <button class="btn ghost sm" onclick="doSaldo(${uid},'set')">📝 Set</button>
+    </div>`;
+  el('adm-modal').classList.add('open');
+}
+
+async function doSaldo(uid, type) {
+  const amt = parseInt(el('saldo-amt').value);
+  const note = el('saldo-note').value;
+  if(!amt||amt<=0){toast('❌ Masukkan jumlah yang valid','fail');return;}
+  const res = await POST('/api/admin/saldo',{user_id:uid,amount:amt,type,note});
+  if(res.ok){toast('✅ '+res.msg,'ok');closeAdmModal();loadAdminUsers();}
+  else toast('❌ '+res.msg,'fail');
+}
+
+async function toggleBan(uid, ban, name) {
+  const res = await POST('/api/admin/ban',{user_id:uid,ban});
+  if(res.ok){toast(`✅ ${name} ${ban?'diblokir':'dibuka blokirnya'}`,'ok');loadAdminUsers();}
+  else toast('❌ '+res.msg,'fail');
+}
+
+async function loadAdminOrders(status='all', q='') {
+  let url = `/api/admin/orders?status=${status}`;
+  if(q) url+=`&q=${encodeURIComponent(q)}`;
+  const res = await GET(url);
+  if(!res.ok) return;
+  allAdmOrders = res.data;
+  renderOrdersTable(allAdmOrders);
+}
+function filterOrders(s){ loadAdminOrders(s); }
+function searchOrders(q){ loadAdminOrders('all',q); }
+function renderOrdersTable(orders) {
+  if(!orders.length){el('orders-table').innerHTML='<div class="loading">Tidak ada order</div>';return;}
+  el('orders-table').innerHTML=`<table class="admin-table"><thead><tr>
+    <th>User</th><th>Layanan</th><th>Negara</th><th>Nomor</th><th>OTP</th><th>Harga</th><th>Status</th><th>Waktu</th>
+  </tr></thead><tbody>
+  ${orders.map(o=>`<tr>
+    <td><div class="td-name">${o.user_name}</div><div class="td-email">${o.user_email}</div></td>
+    <td>${o.service}</td>
+    <td>${o.country}</td>
+    <td style="font-family:monospace;font-size:12px">${o.phone_number||'-'}</td>
+    <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--green)">${o.otp_code!=='-'?o.otp_code:'—'}</td>
+    <td class="td-saldo">${o.price_f}</td>
+    <td><span class="badge ${o.status}">${o.status}</span></td>
+    <td style="font-size:11px;color:var(--text3)">${o.created_at?.substring(0,16)||''}</td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function loadAdminDeps(status='all', q='') {
+  let url = `/api/admin/deposits?status=${status}`;
+  if(q) url+=`&q=${encodeURIComponent(q)}`;
+  const res = await GET(url);
+  if(!res.ok) return;
+  allAdmDeps = res.data;
+  renderDepsTable(allAdmDeps);
+}
+function filterDeps(s){ loadAdminDeps(s); }
+function searchDeps(q){ loadAdminDeps('all',q); }
+function renderDepsTable(deps) {
+  if(!deps.length){el('deps-table').innerHTML='<div class="loading">Tidak ada deposit</div>';return;}
+  el('deps-table').innerHTML=`<table class="admin-table"><thead><tr>
+    <th>User</th><th>ID Deposit</th><th>Nominal</th><th>Diterima</th><th>Biaya</th><th>Metode</th><th>Status</th><th>Waktu</th>
+  </tr></thead><tbody>
+  ${deps.map(d=>`<tr>
+    <td><div class="td-name">${d.user_name}</div><div class="td-email">${d.user_email}</div></td>
+    <td style="font-size:11px;color:var(--text3)">${d.deposit_id?.substring(0,12)||'-'}...</td>
+    <td class="td-saldo">${d.amount_f}</td>
+    <td style="color:var(--green);font-weight:700">${d.recv_f}</td>
+    <td style="color:var(--yellow)">${d.fee?'Rp '+Number(d.fee).toLocaleString('id-ID'):'-'}</td>
+    <td>${d.method||'QRIS'}</td>
+    <td><span class="badge ${d.status==='success'?'completed':d.status==='pending'?'pending':'cancelled'}">${d.status}</span></td>
+    <td style="font-size:11px;color:var(--text3)">${d.created_at?.substring(0,16)||''}</td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function loadAdminLogs() {
+  const res = await GET('/api/admin/logs');
+  if(!res.ok) return;
+  const logs = res.data;
+  if(!logs.length){el('logs-table').innerHTML='<div class="loading">Belum ada log</div>';return;}
+  el('logs-table').innerHTML=`<table class="admin-table"><thead><tr>
+    <th>User</th><th>Admin</th><th>Tipe</th><th>Jumlah</th><th>Sebelum</th><th>Sesudah</th><th>Catatan</th><th>Waktu</th>
+  </tr></thead><tbody>
+  ${logs.map(l=>`<tr>
+    <td><div class="td-name">${l.user_name}</div><div class="td-email">${l.user_email}</div></td>
+    <td style="font-size:12px">${l.admin_name||'-'}</td>
+    <td><span class="badge ${l.type==='add'?'completed':l.type==='reduce'?'cancelled':'pending'}">${l.type}</span></td>
+    <td class="td-saldo">${l.amount_f}</td>
+    <td style="font-size:12px;color:var(--text3)">${l.before_f}</td>
+    <td style="font-size:12px;color:var(--green)">${l.after_f}</td>
+    <td style="font-size:12px;color:var(--text3)">${l.note||'-'}</td>
+    <td style="font-size:11px;color:var(--text3)">${l.created_at?.substring(0,16)||''}</td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function closeAdmModal() { el('adm-modal').classList.remove('open'); }
+
+// ================================================================
+// INIT ON LOAD
+// ================================================================
+(async()=>{
+  try {
+    const res = await GET('/api/me');
+    if(res.ok) {
+      if(res.data.is_admin) initAdmin();
+      else initApp();
+    }
+  } catch(e) {}
+})();
+
+// ================================================================
+// HELPERS
+// ================================================================
+function el(id){return document.getElementById(id)}
+function val(id){return (el(id)?.value||'').trim()}
+function show(id,v){const e=el(id);if(e){e.style.display=v?'':'none';if(v)e.classList.add('active');else e.classList.remove('active');}}
+function setBtn(id,html,disabled){const b=el(id);if(b){b.innerHTML=html;b.disabled=disabled;}}
+function showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='block';}}
+function escQ(s){return String(s||'').replace(/'/g,"\\'")}
+</script>
+</body>
+</html>
