@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // KONFIGURASI — WAJIB SESUAIKAN
 // ============================================================
 const CONFIG = {
-  API_KEY:        process.env.API_KEY        || '',
+  API_KEY:        process.env.API_KEY        || 'API_KEY',
   API_BASE:       'https://www.rumahotp.com',
   PROFIT_NOKOS:   parseInt(process.env.PROFIT_NOKOS   || '500'),
   PROFIT_DEPOSIT: parseInt(process.env.PROFIT_DEPOSIT || '500'),
